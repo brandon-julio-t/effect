@@ -10552,17 +10552,17 @@ function causeToFormatter<E>(error: Formatter<E>, defect: Formatter<unknown>) {
 }
 
 /**
- * Type-level representation of {@link Error}.
+ * Type-level representation of {@link ErrorInstance}.
  *
  * @category Error
  * @since 4.0.0
  */
-export interface Error extends instanceOf<globalThis.Error> {
-  readonly "Rebuild": Error
+export interface ErrorInstance extends instanceOf<globalThis.Error> {
+  readonly "Rebuild": ErrorInstance
 }
 
 /**
- * Options for {@link Error} and {@link Defect}.
+ * Options for {@link ErrorInstance} and {@link Defect}.
  *
  * @category options
  * @since 4.0.0
@@ -10625,7 +10625,7 @@ const getErrorOptions = (key: ErrorOptionsKey): NormalizedErrorOptions | undefin
   }
 }
 
-const errorSchemaCache: Array<Error | undefined> = []
+const errorSchemaCache: Array<ErrorInstance | undefined> = []
 
 /**
  * Schema for JavaScript `Error` objects.
@@ -10642,7 +10642,7 @@ const errorSchemaCache: Array<Error | undefined> = []
  * @category constructors
  * @since 4.0.0
  */
-export function Error(options?: ErrorOptions): Error {
+export function ErrorInstance(options?: ErrorOptions): ErrorInstance {
   const key = getErrorOptionsKey(options)
   const cached = errorSchemaCache[key]
   if (cached !== undefined) {
@@ -10655,7 +10655,9 @@ export function Error(options?: ErrorOptions): Error {
       payload: normalizedOptions ?? null
     },
     toCode: () => ({
-      runtime: normalizedOptions !== undefined ? `Schema.Error(${format(normalizedOptions)})` : `Schema.Error()`,
+      runtime: normalizedOptions !== undefined
+        ? `Schema.ErrorInstance(${format(normalizedOptions)})`
+        : `Schema.ErrorInstance()`,
       Type: `globalThis.Error`
     }),
     expected: "Error",
@@ -10667,22 +10669,22 @@ export function Error(options?: ErrorOptions): Error {
 }
 
 /**
- * Reviver for persisted {@link Error} declarations.
+ * Reviver for persisted {@link ErrorInstance} declarations.
  *
  * **When to use**
  *
- * Use when reconstructing documents that may contain schemas created by {@link Error}.
+ * Use when reconstructing documents that may contain schemas created by {@link ErrorInstance}.
  *
- * @see {@link Error} for creating the corresponding schema
+ * @see {@link ErrorInstance} for creating the corresponding schema
  *
  * @category Error
  * @since 4.0.0
  */
-export const ErrorReviver = InternalSchema.makeDeclarationReviver(
+export const ErrorInstanceReviver = InternalSchema.makeDeclarationReviver(
   "effect/schema/Error",
   ErrorRepresentationPayload,
   ({ annotations, payload }) => {
-    const schema = Error(payload ?? undefined)
+    const schema = ErrorInstance(payload ?? undefined)
     return annotations === undefined ? schema : schema.annotate(annotations)
   }
 )
@@ -10736,7 +10738,7 @@ const defectSchemaCache: Array<Defect | undefined> = []
  * - Values that cannot be represented as JSON fall back to Effect's formatted
  *   string representation.
  *
- * @see {@link Error} for a schema that only accepts JavaScript `Error` values.
+ * @see {@link ErrorInstance} for a schema that only accepts JavaScript `Error` values.
  * @category constructors
  * @since 4.0.0
  */
@@ -14272,8 +14274,8 @@ type MissingSelfGeneric<Usage extends string> =
  * ```
  *
  * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
- * @see {@link ErrorClass} for defining schema-backed error classes
- * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+ * @see {@link Error} for defining schema-backed error classes
+ * @see {@link TaggedError} for defining tagged schema-backed error classes
  *
  * @category constructors
  * @since 3.10.0
@@ -14384,7 +14386,7 @@ export const TaggedClass: {
  * ```ts import.meta.vitest
  * import { Effect, Schema } from "effect"
  *
- * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+ * class NotFound extends Schema.Error<NotFound>("NotFound")({
  *   id: Schema.Number
  * }) {}
  *
@@ -14396,23 +14398,23 @@ export const TaggedClass: {
  * @category constructors
  * @since 4.0.0
  */
-export const ErrorClass: {
+export const Error: {
   <Self = never, Brand = {}>(identifier: string): {
     <const Fields extends Struct.Fields>(
       fields: Fields,
       annotations?: Annotations.Declaration<Self, readonly [Struct<Fields>]>
-    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass">
+    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.Error">
       : Class<Self, Struct<Fields>, Cause_.YieldableError & Brand>
     <S extends Struct<Struct.Fields>>(
       schema: S,
       annotations?: Annotations.Declaration<Self, readonly [S]>
-    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass"> : Class<Self, S, Cause_.YieldableError & Brand>
+    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.Error"> : Class<Self, S, Cause_.YieldableError & Brand>
   }
 } = <Self, Brand = {}>(identifier: string) =>
 (
   schema: Struct.Fields | Struct<Struct.Fields>,
   annotations?: Annotations.Declaration<Self, readonly [Struct<Struct.Fields>]>
-): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass">
+): [Self] extends [never] ? MissingSelfGeneric<"Schema.Error">
   : Class<Self, Struct<Struct.Fields>, Cause_.YieldableError & Brand> =>
 {
   const struct = isStruct(schema) ? schema : Struct(schema)
@@ -14442,7 +14444,7 @@ export const ErrorClass: {
  * ```ts import.meta.vitest
  * import { Effect, Schema } from "effect"
  *
- * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+ * class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {
  *   id: Schema.Number
  * }) {}
  *
@@ -14454,13 +14456,13 @@ export const ErrorClass: {
  * @category constructors
  * @since 3.10.0
  */
-export const TaggedErrorClass: {
+export const TaggedError: {
   <Self = never, Brand = {}>(identifier?: string): {
     <Tag extends string, const Fields extends Struct.Fields>(
       tag: Tag,
       fields: Fields,
       annotations?: Annotations.Declaration<Self, readonly [TaggedStruct<Tag, Fields>]>
-    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass">
+    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedError">
       : Class<Self, TaggedStruct<Tag, Fields>, Cause_.YieldableError & Brand>
     <Tag extends string, S extends Struct<Struct.Fields>>(
       tag: Tag,
@@ -14469,7 +14471,7 @@ export const TaggedErrorClass: {
         Self,
         readonly [Struct<Simplify<{ readonly _tag: tag<Tag> } & S["fields"]>>]
       >
-    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass">
+    ): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedError">
       : Class<Self, Struct<Simplify<{ readonly _tag: tag<Tag> } & S["fields"]>>, Cause_.YieldableError & Brand>
   }
 } = (identifier?: string) => {
@@ -14483,7 +14485,7 @@ export const TaggedErrorClass: {
         unsafePreserveChecks: true
       }) :
       TaggedStruct(tagValue, schema)
-    return ErrorClass<any, {}>(identifier ?? tagValue)(
+    return Error<any, {}>(identifier ?? tagValue)(
       struct,
       annotations as Annotations.Declaration<any, readonly [typeof struct]>
     )
